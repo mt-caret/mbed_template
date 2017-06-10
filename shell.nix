@@ -1,8 +1,4 @@
-{}:
-
-let
-  pkgs = import <nixpkgs> { };
-in with pkgs; {
+with import <nixpkgs> {}; {
   mbedEnv = stdenv.mkDerivation {
     name = "mbed";
     buildInputs = [
@@ -14,28 +10,57 @@ in with pkgs; {
         ps.prettytable
         ps.jinja2
         ps.colorama
+        ps.beautifulsoup4
+        (ps.buildPythonPackage rec {
+          name = "${pname}-${version}";
+          pname = "fuzzywuzzy";
+          version = "0.14.0";
+
+          src = ps.fetchPypi {
+            inherit pname version;
+            sha256 = "1fd574m1rlzlpayacgyms0ivvbidszrxfawzw6am2sjma6p0h8wg";
+          };
+
+          checkInputs = [ ps.hypothesis ps.pycodestyle ps.pytest ];
+          checkPhase = ''
+            py.test
+          '';
+
+          meta = {
+            homepage = "https://github.com/seatgeek/fuzzywuzzy";
+            description = "Fuzzy String Matching in Python";
+            license = licenses.gpl2;
+          };
+        })
+        (ps.buildPythonPackage rec {
+          name = "${pname}-${version}";
+          pname = "intelhex";
+          version = "2.1";
+
+          src = ps.fetchPypi {
+            inherit pname version;
+            sha256 = "0k5l1mn3gv1vb0jd24ygxksx8xqr57y1ivgyj37jsrwpzrp167kw";
+          };
+
+          # tests do not pass: https://github.com/bialix/intelhex/issues/14
+          doCheck = false;
+
+          meta = {
+            homepage = "https://github.com/bialix/intelhex";
+            description = "Python IntelHex library";
+            license = licenses.bsd3;
+          };
+        })
         (ps.buildPythonPackage rec {
           name = "${pname}-${version}";
           pname = "mbed-cli";
           version = "1.1.1";
 
-# While we wait for the new fetchPypi to hit stable
-          src = pkgs.fetchurl {
-            url = "https://github.com/ARMmbed/mbed-cli/archive/${version}.zip";
-#          src = ps.fetchPypi {
-#            inherit pname version;
-#            extension = "zip";
-            sha256 = "1hxp649hfpkw33i5h4yhcm0hbd5mzj8rj0i5kd9534yrsx3glba6";
+          src = ps.fetchPypi {
+            inherit pname version;
+            extension = "zip";
+            sha256 = "1mrnrl94fqw8i5klv637ac9g0ypvrfdikgkcwsfy4j7h9dffhpym";
           };
-
-          checkInputs = [ ps.pyyaml ps.pytest ];
-          checkPhase = ''
-            sed -i "s~- mbed~- $out/bin/mbed~" circle.yml
-            sed -i "s~& mbed~\& $out/bin/mbed~" circle.yml
-            sed -i "s/^.*&&.*$//" circle.yml # because hitting the network won't work anyway...
-            sed -i "s/popen(\['git', 'commit'/popen(['git', 'config', 'user.email', '\"you@example.com\"']);popen(['git', 'config', 'user.name', '\"Your Name\"']);popen(['git', 'commit'/" test/util.py
-            ${python.interpreter} circle_tests.py
-          '';
 
           buildInputs = [
             git
