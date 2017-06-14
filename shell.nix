@@ -43,6 +43,7 @@ with import <nixpkgs> {}; {
           };
 
           # tests do not pass: https://github.com/bialix/intelhex/issues/14
+          # fix merged, waiting for next release (https://github.com/bialix/intelhex/pull/15)
           doCheck = false;
 
           meta = {
